@@ -1,1 +1,7 @@
 requests
+numpy
+matplotlib
+Pillow
+scikit-learn
+scipy
+scikit-image
