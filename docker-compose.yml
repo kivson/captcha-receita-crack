@@ -1,0 +1,6 @@
+version: '3'
+
+services:
+  cracker:
+    build: .
+    image: kivson/captcha-receita-crack
