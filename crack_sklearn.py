@@ -43,5 +43,5 @@ def split(arrayimage):
 
 
 if __name__ == '__main__':
-    preprocessada = preprocessamento(Path("./data/originais/0e394dec-7d52-4122-8fa2-fbfb3826d807.png"))
+    preprocessada = preprocessamento(Path("./data/originais/1f7934d5-123d-45f9-bf3a-b94faa1b7aea.png"))
     split(preprocessada)
