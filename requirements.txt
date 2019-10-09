@@ -5,3 +5,6 @@ Pillow
 scikit-learn
 scipy
 scikit-image
+antigate
+python3-anticaptcha
+tensorflow
