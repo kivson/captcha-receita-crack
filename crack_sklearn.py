@@ -20,6 +20,7 @@ from sklearn.svm import SVC
 import tensorflow as tf
 from tensorflow.keras import layers
 
+
 from keys import anticaptcha_key
 
 DEBUG = False
@@ -83,7 +84,8 @@ def split_all(pasta_origem, pasta_destino):
         preprocessada = preprocessamento(filename)
         chars = split(preprocessada)
         for i, c in enumerate(chars):
-            nome_pasta = nome[i] if nome[i].islower() else ("$" + nome[i])
+            # nome_pasta = nome[i] if nome[i].islower() else ("$" + nome[i])
+            nome_pasta = nome[i]
             os.makedirs(pasta_destino / f"{nome_pasta}", exist_ok=True)
             save_nparray_as_imagem(c, pasta_destino / f"{nome_pasta}" / (str(uuid.uuid4()) + '.png'))
 
@@ -120,32 +122,56 @@ def gera_svm_char_model(path):
 
 
 def gera_tf_char_model(path):
-    gerador = tf.keras.preprocessing.image.ImageDataGenerator(validation_split = 0.2)
+    gerador = tf.keras.preprocessing.image.ImageDataGenerator()
 
     train_generator = gerador.flow_from_directory(
         path,
         target_size=(28, 28),
-        batch_size=32,
+        batch_size=442,
         class_mode='categorical',
         color_mode='grayscale')
 
-    modelo = get_modelo((28,28,1), 59)
+    modelo = get_modelo((28,28,1), 35)
+    data = train_generator.next()
+    modelo.fit_generator(train_generator,
+              epochs=10,
+    )
 
-    modelo.fit_generator(train_generator, steps_per_epoch=50,
-                    epochs=200,
-)
+def gera_tf_char_model2(path):
+
+    class_to_int = lambda x: '123456789abcdefghijklmnopqrstuvwxyz'.find(x.lower())
+
+    paths = list(get_images_files(path))
+    Y = np.array([class_to_int(Path(path).parent.name) for path in paths])
+    X = np.array([np.array(Image.open(path).convert('1')).reshape((28,28,1)).astype(np.float32) for path in paths])
+
+    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.20)
+
+    y_train = tf.keras.utils.to_categorical(y_train, 35)
+    y_test = tf.keras.utils.to_categorical(y_test, 35)
+
+    modelo = get_modelo((28,28,1), 35)
+
+    modelo.fit(X_train, y_train,
+              batch_size=32,
+              epochs=50,
+              verbose=1,
+              validation_data=(X_test, y_test)
+               )
+    score = modelo.evaluate(X_test, y_test, verbose=0)
+    print(score)
 
 
 def get_modelo(imput_shape, out_shape):
     model = tf.keras.Sequential()
-    model.add(layers.Convolution2D(48, (5, 5), activation='relu', input_shape=imput_shape))
+    model.add(layers.Convolution2D(32, (5, 5), activation='relu', input_shape=imput_shape))
     model.add(layers.MaxPooling2D(pool_size=(2, 2)))
     model.add(layers.Convolution2D(64, (5, 5), activation='relu'))
     model.add(layers.MaxPooling2D(pool_size=(2, 2)))
     # model.add(layers.Convolution2D(128, (5, 5), activation='relu'))
     # model.add(layers.MaxPooling2D(pool_size=(2, 2)))
 
-    # model.add(Dropout(0.5))
+    model.add(layers.Dropout(0.5))
     model.add(layers.Flatten())
     model.add(layers.Dense(2048, activation='relu'))
     model.add(layers.Dropout(0.5))
@@ -154,7 +180,7 @@ def get_modelo(imput_shape, out_shape):
     # 8. Compile model
     model.compile(loss='categorical_crossentropy',
                   optimizer='adam',
-                  metrics=['categorical_accuracy'])
+                  metrics=['categorical_accuracy', "accuracy"])
 
     return model
 
@@ -163,5 +189,5 @@ if __name__ == '__main__':
     # split_all(Path("./data/classificadas"), Path("./data/chars"))
     # solve_all_antigate(Path("./data/originais"), Path("./data/classificadas"))
     # gera_svm_char_model(Path("./data/chars"))
-    gera_tf_char_model(Path("./data/chars"))
+    gera_tf_char_model2(Path("./data/chars"))
     pass

@@ -8,3 +8,4 @@ scikit-image
 antigate
 python3-anticaptcha
 tensorflow
+tensorflow-gpu
