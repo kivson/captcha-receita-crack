@@ -23,7 +23,7 @@ from tensorflow.keras import layers
 
 from keys import anticaptcha_key
 
-DEBUG = False
+DEBUG = True
 
 def get_images_files(path):
     for root, dirs, files in os.walk(path):
@@ -52,7 +52,7 @@ def preprocessamento(imagempath):
     if DEBUG:
         save_nparray_as_imagem(eroded, "./data/debug/eroded.png")
 
-    sem_pontos = morphology.remove_small_objects(eroded, min_size=2)
+    sem_pontos = morphology.remove_small_objects(eroded, min_size=8)
     if DEBUG:
         save_nparray_as_imagem(sem_pontos, "./data/debug/remove_pequenos_objetos.png")
 
@@ -100,7 +100,7 @@ def solve_all_antigate(pasta_origem, pasta_destino):
             os.rename(path, pasta_destino / f"{resposta1}.png")
 
     paths = get_images_files(pasta_origem)
-    with ThreadPoolExecutor(max_workers=10) as executor:
+    with ThreadPoolExecutor(max_workers=30) as executor:
         for path in paths:
             executor.submit(decode, path)
 
@@ -186,8 +186,8 @@ def get_modelo(imput_shape, out_shape):
 
 
 if __name__ == '__main__':
-    # split_all(Path("./data/classificadas"), Path("./data/chars"))
+    split_all(Path("./data/classificadas"), Path("./data/chars"))
     # solve_all_antigate(Path("./data/originais"), Path("./data/classificadas"))
     # gera_svm_char_model(Path("./data/chars"))
-    gera_tf_char_model2(Path("./data/chars"))
+    # gera_tf_char_model2(Path("./data/chars"))
     pass
